@@ -19,6 +19,8 @@
 package org.wso2.carbon.identity.auth.otp.core.util;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.owasp.encoder.Encode;
 import org.wso2.carbon.identity.application.authentication.framework.exception.AuthenticationFailedException;
 import org.wso2.carbon.identity.application.common.model.Property;
@@ -27,6 +29,8 @@ import org.wso2.carbon.identity.auth.otp.core.internal.AuthenticatorDataHolder;
 import org.wso2.carbon.identity.central.log.mgt.utils.LoggerUtils;
 
 import javax.servlet.http.HttpServletRequest;
+
+import java.util.Map;
 
 import static org.wso2.carbon.identity.auth.otp.core.constant.AuthenticatorConstants.MULTI_OPTION_URI_PARAM;
 import static org.wso2.carbon.identity.handler.event.account.lock.constants.AccountConstants.ACCOUNT_UNLOCK_TIME_PROPERTY;
@@ -38,6 +42,7 @@ import static org.wso2.carbon.identity.handler.event.account.lock.constants.Acco
  */
 public class AuthenticatorUtils {
 
+    private static final Log LOG = LogFactory.getLog(AuthenticatorUtils.class);
     /**
      * Get the multi option URI query param.
      *
@@ -87,4 +92,51 @@ public class AuthenticatorUtils {
         }
         return connectorConfigs;
     }
+
+    /**
+     * Get the maximum allowed retry attempts limit from the runtime parameters.
+     * If not found or invalid, return -1.
+     *
+     * @param runtimeParams Runtime parameters map.
+     * @return Maximum allowed retry attempts limit.
+     */
+    public static int getMaximumAllowedRetryAttemptsLimit(Map<String, String> runtimeParams) {
+
+        if (runtimeParams != null && runtimeParams.get(AuthenticatorConstants.ALLOWED_RETRY_COUNT) != null) {
+            try {
+                return Integer.parseInt(runtimeParams.get(AuthenticatorConstants.ALLOWED_RETRY_COUNT));
+            } catch (NumberFormatException e) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Invalid value provided for maximum allowed retry attempts limit. " +
+                            "Falling back to default value of 5.", e);
+                }
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    /**
+    * Get the maximum allowed resend attempts limit from the runtime parameters.
+    * If not found or invalid, return the default value of 5.
+    *
+    * @param runtimeParams Runtime parameters map.
+    * @return Maximum allowed resend attempts limit.
+    */
+    public static int getMaximumAllowedResendAttemptsLimit(Map<String, String> runtimeParams) {
+
+        if (runtimeParams != null && runtimeParams.get(AuthenticatorConstants.ALLOWED_RESEND_COUNT) != null) {
+            try {
+                return Integer.parseInt(runtimeParams.get(AuthenticatorConstants.ALLOWED_RESEND_COUNT));
+            } catch (NumberFormatException e) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Invalid value provided for maximum allowed resend attempts limit. " +
+                            "Falling back to default value of 5.", e);
+                }
+                return AuthenticatorConstants.DEFAULT_OTP_RESEND_ATTEMPTS;
+            }
+        }
+        return AuthenticatorConstants.DEFAULT_OTP_RESEND_ATTEMPTS;
+    }
 }
+

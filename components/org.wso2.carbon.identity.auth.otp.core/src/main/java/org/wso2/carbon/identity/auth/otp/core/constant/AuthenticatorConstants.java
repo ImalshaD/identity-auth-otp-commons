@@ -44,6 +44,7 @@ public class AuthenticatorConstants {
     public static final String OTP_TOKEN = "otpToken";
     public static final String OTP = "otp";
     public static final String OTP_RESEND_ATTEMPTS = "otpResendAttempts";
+    public static final String OTP_RETRY_ATTEMPTS = "otpRetyAttempts";
     public static final String ERROR_CODE_MISSING_SMS_SENDER = "40001";
 
     // Query params.
@@ -63,6 +64,10 @@ public class AuthenticatorConstants {
     public static final String RECAPTCHA_PARAM = "&reCaptcha=";
     public static final String USERNAME_PARAM = "&username=";
     public static final String PROPERTY_ACCOUNT_LOCK_ON_FAILURE = "account.lock.handler.enable";
+
+    //Runtime Params.
+    public static final String ALLOWED_RETRY_COUNT = "allowedRetryCount";
+    public static final String ALLOWED_RESEND_COUNT = "allowedResendCount";
 
     /**
      * User claim related constants.

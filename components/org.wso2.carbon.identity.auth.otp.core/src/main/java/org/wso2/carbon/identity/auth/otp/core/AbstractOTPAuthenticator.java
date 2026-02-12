@@ -127,6 +127,7 @@ import static org.wso2.carbon.identity.auth.otp.core.constant.AuthenticatorConst
 import static org.wso2.carbon.identity.auth.otp.core.constant.AuthenticatorConstants.OTP_ALPHA_NUMERIC_CHAR_SET;
 import static org.wso2.carbon.identity.auth.otp.core.constant.AuthenticatorConstants.OTP_NUMERIC_CHAR_SET;
 import static org.wso2.carbon.identity.auth.otp.core.constant.AuthenticatorConstants.OTP_RESEND_ATTEMPTS;
+import static org.wso2.carbon.identity.auth.otp.core.constant.AuthenticatorConstants.OTP_RETRY_ATTEMPTS;
 import static org.wso2.carbon.identity.auth.otp.core.constant.AuthenticatorConstants.RECAPTCHA_PARAM;
 import static org.wso2.carbon.identity.auth.otp.core.constant.AuthenticatorConstants.RESEND;
 import static org.wso2.carbon.identity.auth.otp.core.constant.AuthenticatorConstants.RETRY_QUERY_PARAMS;
@@ -419,6 +420,9 @@ public abstract class AbstractOTPAuthenticator extends AbstractApplicationAuthen
                             String.valueOf(System.currentTimeMillis()));
                     setUserClaimValueFromUserStore(claimMap, mappedLocalUser);
                 }
+                if (scenario == RESEND_OTP) {
+                    updateResendCount(context);
+                }
             } else {
                 if (scenario == RESEND_OTP) {
                     updateResendCount(context);
@@ -436,6 +440,15 @@ public abstract class AbstractOTPAuthenticator extends AbstractApplicationAuthen
                                                  AuthenticationContext context) throws AuthenticationFailedException {
 
         AuthenticatedUser authenticatedUserFromContext = getAuthenticatedUserFromContext(context);
+        //TODO -adding a context counter update for retry
+        if (context.isRetrying()) {
+            Map<String, String> runtimeParams = getRuntimeParams(context);
+            updateRetryCount(context);
+            context.setProperty("skipRetryFromAuthenticator", true);
+            throw handleAuthErrorScenario(ERROR_CODE_OTP_INVALID,
+                    AuthenticatorUtils.maskIfRequired(authenticatedUserFromContext.getUserName()));
+        }
+
         if (authenticatedUserFromContext == null) {
             throw handleAuthErrorScenario(ERROR_CODE_NO_USER_FOUND);
         }
@@ -1096,6 +1109,16 @@ public abstract class AbstractOTPAuthenticator extends AbstractApplicationAuthen
             context.setProperty(OTP_RESEND_ATTEMPTS, 1);
         } else {
             context.setProperty(OTP_RESEND_ATTEMPTS, (int) context.getProperty(OTP_RESEND_ATTEMPTS) + 1);
+        }
+    }
+
+    private void updateRetryCount(AuthenticationContext context) {
+
+        if (context.getProperty(OTP_RETRY_ATTEMPTS) == null ||
+                StringUtils.isBlank(context.getProperty(OTP_RETRY_ATTEMPTS).toString())) {
+            context.setProperty(OTP_RETRY_ATTEMPTS, 1);
+        } else {
+            context.setProperty(OTP_RETRY_ATTEMPTS, (int) context.getProperty(OTP_RETRY_ATTEMPTS) + 1);
         }
     }
 
